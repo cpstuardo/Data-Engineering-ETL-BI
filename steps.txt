@@ -23,11 +23,11 @@
 
 5. Create Data Pipeline to move data into S3 (historical and hourly)
     Important: 
-    - create IAM roles with Permissions Policies
+    - create IAM roles (EC2 y datapipeline) with Permissions Policies 
     - edit in architect
         - data nodes:
             - can edit select query
-            - remove directory path # to use the same path on each pipeline activation
+            - remove directory path (to use the same path on each pipeline activation)
             - file path: #{myOutputS3Loc}/filename.csv
         - Others:
             - add an optinal field: Database Name
@@ -38,7 +38,7 @@
     - dc2.large (for free tier)
     - select number of nodes
     - database configuration
-    - create IAM role (policies: AmazonRedshiftFullAccess)
+    - create IAM role redshift (policies: AmazonRedshiftFullAccess, AmazonS3FullAccess, AWSGlueServiceRole)
 
 7. Allow local IP address (Redshift)
     VPC -> security groups -> "default" group name -> inbound rules -> edit rules -> add rule:
@@ -61,19 +61,41 @@
     - copy data from s3 files (codes on Redshift folder)
     - create staging schema for new data
 
-10. Create Glue job to update Redshift data
-    
+10. Create Glue job to update Redshift data (python shell)
+    - create Secret Manager to save Redshift cluster password
+    - create IAM role Glue - Redshift 
+      (policies: AWSGlueServiceRole, SecretsManagerReadWrite, AWSGlueConsoleFullAccess, AmazonRedshiftFullAccess, AmazonS3FullAccess)
+    - create connection: (needed to connect Glue to Redshift)
+        glue -> connections -> add connection -> options: (connection type: Amazon Redshift) -> select VPC, subnet and security group (default)
+    - create glue job
+    - edit script (aws_glue/python-shell-jobs)
 
-11. Create AWS Lambda function to trigger glue job (5) when is new file in S3 folder
+11. Create AWS Lambda function to trigger glue job (10) when is new file in S3 folder
+    - create IAM role Lambda - Glue (policies: AmazonS3FullAccess, AWSLamdaExecute, AWSGlueConsoleFullAccess)
+    - create Lambda function (python shell option, script (lambda_triggers/trigger_orders_hourly.py))
+    - edit trigger: S3
 
 12. Upload external data to S3
 
-13. Create Glue job to transform csv external data to parquet
+13. Create Glue job to transform csv external data to parquet (pyspark)
+    - create glue job
+    - edit script (aws_glue/pyspark-jobs)
 
-14. Create AWS Lambda function to trigger glue job (8) when is new file in S3 folder
+14. Create AWS Lambda function to trigger glue job (13) when is new file in S3 folder
+    - create Lambda function (pyspark option, script (lambda_triggers/pyspark-etl-job-trigger.py))
+    - edit trigger: S3
 
 15. Create data catalog from external data
+    - create Glue crawler: 
+        Glue -> crawlers -> add crawler -> choose file folder -> IAM role glue - redshift -> add database
+        options: 
+            - During the crawler run... Ignore changes... (to not mess up when upload data with different schema)
+    - run crawler (to create data catalog)
+    * Important: to edit data catalog tables
+        To edit headers: Glue -> tables -> edit schema -> change column names
+        To remove first row: Glue -> tables -> edit table details -> new (key: skip.header.line.count, value: 1)
 
 16. Use Athena to explore external data
 
 17. Create external schema from data catalog in Redshift
+    - run code (redshift/redshift-spectrum/create_external_schema.sql) on Redshift DB
