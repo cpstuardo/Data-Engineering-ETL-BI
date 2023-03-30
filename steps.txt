@@ -1,0 +1,79 @@
+1. Create RDS MySQL database
+    Options: 
+    - MySQL
+    - name
+    - credentials
+    - password authentication
+    - public accessible (to conect locally)
+
+2. Allow local IP address (MySQL)
+    VPC -> security groups -> "default" group name -> inbound rules -> edit rules -> add rule:
+    - type: MySQL
+    - source: MyIP
+
+3. Connect DBeaver to RDS
+    DBeaver -> create -> connection -> MySQL
+    Options:
+    - server host: RDS db endpoint (ej: "ecommerce-rds.czl9nobwf9ha.eu-west-1.rds.amazonaws.com")
+    - user: user set up in db instance
+    - password: password set up in db instance
+    - test connection
+
+4. Load transactional data into RDS
+
+5. Create Data Pipeline to move data into S3 (historical and hourly)
+    Important: 
+    - create IAM roles with Permissions Policies
+    - edit in architect
+        - data nodes:
+            - can edit select query
+            - remove directory path # to use the same path on each pipeline activation
+            - file path: #{myOutputS3Loc}/filename.csv
+        - Others:
+            - add an optinal field: Database Name
+
+6. Setup Redshift cluster
+    - create cluster
+    - name
+    - dc2.large (for free tier)
+    - select number of nodes
+    - database configuration
+    - create IAM role (policies: AmazonRedshiftFullAccess)
+
+7. Allow local IP address (Redshift)
+    VPC -> security groups -> "default" group name -> inbound rules -> edit rules -> add rule:
+    - type: Redshift
+    - source: MyIP
+
+8. Connect Redshift cluster to DBeaver local client
+    DBeaver -> create -> connection -> Redshift
+    Options:
+    - host: Redshift cluster endpoint (ej. "ecommerce-redshift.c42rviq5q9v6.eu-west-1.redshift.amazonaws.com:5439/dev")
+    * Important: remove last 2 segments: "ecommerce-redshift.c42rviq5q9v6.eu-west-1.redshift.amazonaws.com"
+    - database name
+    - user
+    - password
+    - test connection
+
+9. Copy historical transactional data into Redshift
+    - create schema
+    - create tables
+    - copy data from s3 files (codes on Redshift folder)
+    - create staging schema for new data
+
+10. Create Glue job to update Redshift data
+    
+
+11. Create AWS Lambda function to trigger glue job (5) when is new file in S3 folder
+
+12. Upload external data to S3
+
+13. Create Glue job to transform csv external data to parquet
+
+14. Create AWS Lambda function to trigger glue job (8) when is new file in S3 folder
+
+15. Create data catalog from external data
+
+16. Use Athena to explore external data
+
+17. Create external schema from data catalog in Redshift
