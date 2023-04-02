@@ -99,3 +99,20 @@
 
 17. Create external schema from data catalog in Redshift
     - run code (redshift/redshift-spectrum/create_external_schema.sql) on Redshift DB
+
+18. Connect QuickSight to Redshift
+    * Analysis: to create/edit a report
+    * Dashboard: only view report, created from analysis
+    - Create security group for QuickSight Redshift access
+        VPC -> create security group (selected VPC has to be the same of Redshift)
+        edit security group -> edit inbound rules -> add rule (customed TCP, port 5439 (Redshift port), IP address range of Redshift region)
+        (https://docs.aws.amazon.com/quicksight/latest/user/regions.html)
+    - Redshift -> cluster -> edit -> Network and Security -> VPC security group -> add the new security creted
+    - Data set -> create new data set -> Redshift -> import table
+    There is two options to import data:
+        * SPICE: move data to QuickSight memory. Faster
+        * Query: query to data stored on Redshift
+
+
+19. Create visualizations
+    * A good practice is to create a schema for analysis with views, and import those views to quicksight

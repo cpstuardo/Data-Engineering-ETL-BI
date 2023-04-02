@@ -2,7 +2,7 @@
 
 ## Data Engineering project on Amazon Cloud and BI on Power BI
 
-![My Image](./images/arquitecture.png)
+![My Image](./images/architecture.png)
 
 ## Data 
 
@@ -25,6 +25,6 @@ Course: https://www.udemy.com/course/data-engineering-serverless-elt-bi-on-amazo
 - AWS Lambda Function
 - IAM roles
 - Redshift y Redshift Spectrum
-- Power BI
+- QuickSight
 - DBeaver
 
